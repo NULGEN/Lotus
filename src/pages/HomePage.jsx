@@ -7,16 +7,20 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('https://workintech-fe-ecommerce.onrender.com/products')
-      .then(response => {
-        setProducts(Array.isArray(response.data) ? response.data : []);
-        setLoading(false);
-      })
-      .catch(error => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/products');
+        const data = await response.data;
+        setProducts(Array.isArray(data) ? data : []);
+      } catch (error) {
         console.error('Error fetching products:', error);
         setProducts([]);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   if (loading) {

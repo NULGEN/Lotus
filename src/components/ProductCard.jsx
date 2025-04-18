@@ -1,6 +1,10 @@
 import { ShoppingCart } from 'lucide-react';
 
 export default function ProductCard({ product }) {
+  if (!product || !product.images || !product.images.length) {
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <img 
