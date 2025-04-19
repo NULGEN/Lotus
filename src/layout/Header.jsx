@@ -27,6 +27,7 @@ export default function Header() {
             <Link to="/" className="text-gray-600 hover:text-gray-900">Home</Link>
             <Link to="/shop" className="text-gray-600 hover:text-gray-900">Shop</Link>
             <Link to="/categories" className="text-gray-600 hover:text-gray-900">Categories</Link>
+            <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact</Link>
           </nav>
 
           <div className="flex items-center space-x-4">
