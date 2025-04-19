@@ -7,9 +7,12 @@ import { logout } from '../store/actions/authActions';
 export default function Header() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const gravatarUrl = user?.email 
-    ? `https://www.gravatar.com/avatar/${md5(user.email.toLowerCase().trim())}?d=mp&s=40` 
-    : null;
+  
+  const gravatarUrl = user ? `https://www.gravatar.com/avatar/${md5(user.email.toLowerCase())}?d=identicon&s=200` : null;
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
 
   return (
     <header className="bg-white shadow-md">
@@ -37,27 +40,41 @@ export default function Header() {
             </button>
             {user ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  {gravatarUrl && (
-                    <img
-                      src={gravatarUrl}
-                      alt={user.email}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  )}
-                  <span className="text-sm font-medium text-gray-700">{user.email}</span>
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={gravatarUrl}
+                    alt={user.email}
+                    className="w-10 h-10 rounded-full border-2 border-blue-500 shadow-md"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-800">
+                      {user.name || user.email.split('@')[0]}
+                    </span>
+                    <span className="text-xs text-gray-500">{user.email}</span>
+                  </div>
                 </div>
                 <button
-                  onClick={() => dispatch(logout())}
-                  className="text-sm text-red-600 hover:text-red-700"
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-200 flex items-center space-x-1"
                 >
-                  Logout
+                  Sign Out
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="p-2">
-                <User size={20} />
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                >
+                  Sign Up
+                </Link>
+              </div>
             )}
             <button className="p-2 relative">
               <ShoppingBag size={20} />
