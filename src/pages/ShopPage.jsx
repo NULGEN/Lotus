@@ -5,17 +5,21 @@ import ProductCard from '../components/ProductCard';
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/products');
-        const data = await response.data;
-        setProducts(Array.isArray(data) ? data : []);
+        if (response.data && Array.isArray(response.data.products)) {
+          setProducts(response.data.products);
+        } else {
+          setError('Invalid data format received from server');
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
-        setProducts([]);
+        setError('Failed to fetch products');
       } finally {
         setLoading(false);
       }
@@ -32,10 +36,23 @@ export default function ShopPage() {
     );
   }
 
-  const categories = ['all', ...new Set(products.map(product => product.category))];
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
+
+  const categories = ['all', ...new Set(products.map(product => product.category).filter(Boolean))];
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(product => product.category === selectedCategory);
+
+  const formatCategory = (category) => {
+    if (typeof category !== 'string') return '';
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
 
   return (
     <div className="space-y-8">
@@ -48,7 +65,7 @@ export default function ShopPage() {
         >
           {categories.map(category => (
             <option key={category} value={category}>
-              {category.charAt(0).toUpperCase() + category.slice(1)}
+              {formatCategory(category)}
             </option>
           ))}
         </select>
@@ -68,7 +85,7 @@ export default function ShopPage() {
                   : 'hover:bg-gray-100'
               }`}
             >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
+              {formatCategory(category)}
             </button>
           ))}
         </aside>

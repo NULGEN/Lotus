@@ -5,16 +5,20 @@ import ProductCard from '../components/ProductCard';
 export default function HomePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/products');
-        const data = await response.data;
-        setProducts(Array.isArray(data) ? data : []);
+        if (response.data && Array.isArray(response.data.products)) {
+          setProducts(response.data.products);
+        } else {
+          setError('Invalid data format received from server');
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
-        setProducts([]);
+        setError('Failed to fetch products');
       } finally {
         setLoading(false);
       }
@@ -27,6 +31,14 @@ export default function HomePage() {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
