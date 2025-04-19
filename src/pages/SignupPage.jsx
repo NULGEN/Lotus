@@ -19,7 +19,7 @@ export default function SignupPage() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      role_id: 'customer', // Default to Customer role
+      role_id: 2, // Default to Customer role
     },
   });
 
@@ -27,7 +27,7 @@ export default function SignupPage() {
   const selectedRole = watch('role_id');
 
   useEffect(() => {
-    setIsStore(selectedRole === 'store');
+    setIsStore(selectedRole === 3);
   }, [selectedRole]);
 
   const onSubmit = async (data) => {
@@ -37,7 +37,7 @@ export default function SignupPage() {
         name: data.name,
         email: data.email,
         password: data.password,
-        role_id: data.role_id,
+        role_id: parseInt(data.role_id),
       };
 
       if (isStore) {
@@ -112,11 +112,7 @@ export default function SignupPage() {
             id="password"
             {...register('password', {
               required: 'Password is required',
-              minLength: { value: 8, message: 'Password must be at least 8 characters' },
-              pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                message: 'Password must include uppercase, lowercase, number and special character',
-              },
+              minLength: { value: 8, message: 'Password must be at least 8 characters' }
             })}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
@@ -152,9 +148,9 @@ export default function SignupPage() {
             {...register('role_id')}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="customer">Customer</option>
-            <option value="admin">Admin</option>
-            <option value="store">Store Owner</option>
+            <option value={2}>Customer</option>
+            <option value={1}>Admin</option>
+            <option value={3}>Store Owner</option>
           </select>
         </div>
 
