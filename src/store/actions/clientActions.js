@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../../api/axios';
 import { SET_USER, SET_ROLES, SET_THEME, SET_LANGUAGE } from '../reducers/clientReducer';
 
 export const setUser = (user) => ({
@@ -28,7 +28,7 @@ export const fetchRoles = () => async (dispatch, getState) => {
   // Only fetch if roles are empty
   if (roles.length === 0) {
     try {
-      const response = await axios.get('/api/roles');
+      const response = await axios.get('/roles');
       dispatch(setRoles(response.data));
     } catch (error) {
       console.error('Error fetching roles:', error);
