@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { verifyToken } from './store/actions/authActions';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
 import PageContent from './layout/PageContent';
@@ -12,6 +15,12 @@ import AboutPage from './pages/AboutPage';
 import TeamPage from './pages/TeamPage';
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(verifyToken());
+  }, [dispatch]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
