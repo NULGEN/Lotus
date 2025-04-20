@@ -28,6 +28,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/shop/:gender/:category/:id" element={<ShopPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
@@ -41,4 +42,4 @@ function App() {
   );
 }
 
-export default App;
+export default App

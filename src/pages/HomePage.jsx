@@ -1,33 +1,17 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '../components/ProductCard';
+import { fetchProducts } from '../store/actions/productActions';
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const { productList, fetchState } = useSelector((state) => state.products);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/products');
-        if (response.data && Array.isArray(response.data.products)) {
-          setProducts(response.data.products);
-        } else {
-          setError('Invalid data format received from server');
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setError('Failed to fetch products');
-      } finally {
-        setLoading(false);
-      }
-    };
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-    fetchProducts();
-  }, []);
-
-  if (loading) {
+  if (fetchState === 'FETCHING_PRODUCTS') {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -35,10 +19,10 @@ export default function HomePage() {
     );
   }
 
-  if (error) {
+  if (fetchState === 'FAILED_PRODUCTS') {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600">Failed to fetch products. Please try again later.</p>
       </div>
     );
   }
@@ -53,7 +37,7 @@ export default function HomePage() {
       <section>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map(product => (
+          {productList.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

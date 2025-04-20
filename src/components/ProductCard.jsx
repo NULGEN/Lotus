@@ -6,35 +6,51 @@ export default function ProductCard({ product }) {
     return null;
   }
 
-  const imageUrl = Array.isArray(product.images) && product.images.length > 0
-    ? product.images[0]
-    : product.image; // fallback to single image if images array is not available
+  // Get the first valid image URL from either images array or single image property
+  const getImageUrl = () => {
+    if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
+      return product.images[0];
+    }
+    if (product.image) {
+      return product.image;
+    }
+    if (product.thumbnail) {
+      return product.thumbnail;
+    }
+    return 'https://via.placeholder.com/400x300?text=No+Image+Available';
+  };
 
-  if (!imageUrl) {
-    return null;
-  }
+  const handleImageError = (e) => {
+    console.log('Image failed to load:', e.currentTarget.src);
+    e.currentTarget.onerror = null; // Prevent infinite loop
+    e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+  };
 
   return (
     <Link to={`/product/${product.id}`} className="block">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="relative h-48">
+        <div className="relative h-48 bg-gray-100">
           <img 
-            src={imageUrl}
-            alt={product.name} 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-            }}
+            src={getImageUrl()}
+            alt={product.name || 'Product Image'} 
+            className="w-full h-full object-contain"
+            onError={handleImageError}
+            loading="lazy"
           />
         </div>
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
-          <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+          <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
+            {product.name || 'Unnamed Product'}
+          </h3>
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+            {product.description || 'No description available'}
+          </p>
           <div className="flex justify-between items-center mt-4">
-            <span className="text-xl font-bold text-gray-900">${product.price}</span>
+            <span className="text-xl font-bold text-gray-900">
+              ${product.price?.toFixed(2) || '0.00'}
+            </span>
             <button 
-              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700"
+              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200"
               onClick={(e) => {
                 e.preventDefault();
                 // Add to cart logic here

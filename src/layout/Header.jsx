@@ -1,87 +1,143 @@
-import { Menu, Search, ShoppingBag, User } from 'lucide-react';
+import { Search, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import md5 from 'md5';
+import { useEffect, useState } from 'react';
 import { logout } from '../store/actions/authActions';
+import { fetchCategories } from '../store/actions/productActions';
 
 export default function Header() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { categories } = useSelector((state) => state.products);
+  const [showCategories, setShowCategories] = useState(false);
   
-  const gravatarUrl = user ? `https://www.gravatar.com/avatar/${md5(user.email.toLowerCase())}?d=identicon&s=200` : null;
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
   };
 
+  const categoriesByGender = categories.reduce((acc, category) => {
+    const gender = category.gender === 'k' ? 'KADIN' : category.gender === 'e' ? 'ERKEK' : category.gender;
+    if (!acc[gender]) {
+      acc[gender] = [];
+    }
+    acc[gender].push(category);
+    return acc;
+  }, {});
+
+  const getCategoryName = (category) => {
+    if (category.code) {
+      const [, name] = category.code.split(':');
+      if (name) {
+        return name.split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+    }
+    return category.name || 'Category';
+  };
+
   return (
-    <header className="bg-white shadow-md">
-      <div className="container mx-auto px-4">
+    <header className="bg-white shadow-sm fixed w-full top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <button className="p-2 md:hidden">
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center space-x-12">
+            <Link to="/" className="text-2xl font-bold text-gray-900">
+              LOTUS
+            </Link>
 
-          <Link to="/" className="text-2xl font-bold text-gray-800">
-            LOTUS
-          </Link>
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="text-gray-600 hover:text-gray-900">
+                Home
+              </Link>
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowCategories(true)}
+                onMouseLeave={() => setShowCategories(false)}
+              >
+                <button className="text-gray-600 hover:text-gray-900">
+                  Shop
+                </button>
+                {showCategories && (
+                  <div className="absolute top-full left-0 bg-white shadow-xl rounded-lg p-6 w-[600px] -ml-4 border border-gray-100 z-50">
+                    <div className="grid grid-cols-2 gap-8">
+                      {Object.entries(categoriesByGender).map(([gender, cats]) => (
+                        <div key={gender} className="space-y-4">
+                          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+                            {gender}
+                          </h3>
+                          <ul className="space-y-2">
+                            {cats.map(category => (
+                              <li key={category.id}>
+                                <Link 
+                                  to={`/shop/${category.gender}/${category.code?.split(':')[1] || ''}/${category.id}`}
+                                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200 block py-1"
+                                >
+                                  {getCategoryName(category)}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Link to="/about" className="text-gray-600 hover:text-gray-900">
+                About
+              </Link>
+              <Link to="/team" className="text-gray-600 hover:text-gray-900">
+                Team
+              </Link>
+              <Link to="/contact" className="text-gray-600 hover:text-gray-900">
+                Contact
+              </Link>
+            </nav>
+          </div>
 
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-gray-900">Home</Link>
-            <Link to="/shop" className="text-gray-600 hover:text-gray-900">Shop</Link>
-            <Link to="/about" className="text-gray-600 hover:text-gray-900">About</Link>
-            <Link to="/team" className="text-gray-600 hover:text-gray-900">Team</Link>
-            <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact</Link>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <button className="p-2">
+          <div className="flex items-center space-x-6">
+            <button className="text-gray-600 hover:text-gray-900">
               <Search size={20} />
             </button>
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={gravatarUrl}
-                    alt={user.email}
-                    className="w-10 h-10 rounded-full border-2 border-blue-500 shadow-md"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800">
-                      {user.name || user.email.split('@')[0]}
-                    </span>
-                    <span className="text-xs text-gray-500">{user.email}</span>
-                  </div>
-                </div>
+            
+            <div className="flex items-center space-x-3">
+              {user ? (
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-200 flex items-center space-x-1"
+                  className="px-8 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-200"
                 >
                   Sign Out
                 </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link 
-                  to="/login" 
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors duration-200"
-                >
-                  Sign In
-                </Link>
-                <Link 
-                  to="/signup" 
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
-            <button className="p-2 relative">
-              <ShoppingBag size={20} />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                0
-              </span>
-            </button>
+              ) : (
+                <>
+                  <Link 
+                    to="/login" 
+                    className="px-8 py-2 text-sm font-medium text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors duration-200"
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/signup" 
+                    className="px-8 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="relative">
+              <Link to="/cart" className="text-gray-600 hover:text-gray-900">
+                <ShoppingBag size={20} />
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  0
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
