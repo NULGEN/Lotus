@@ -44,108 +44,40 @@ export const setFilter = (filter) => ({
   payload: filter
 });
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Thunk action creator for fetching categories with enhanced retry mechanism
-export const fetchCategories = () => async (dispatch) => {
-  dispatch(setFetchState('FETCHING_CATEGORIES'));
-  let retries = 5;
-  let waitTime = 2000;
-  const maxWaitTime = 32000; // Cap maximum wait time at 32 seconds
-
-  while (retries > 0) {
-    try {
-      const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/categories');
-      if (response.data) {
-        dispatch(setCategories(response.data));
-        dispatch(setFetchState('FETCHED_CATEGORIES'));
-        return;
-      }
+// Thunk action creator for fetching products
+export const fetchProducts = () => async (dispatch) => {
+  dispatch(setFetchState('FETCHING_PRODUCTS'));
+  
+  try {
+    const response = await axios.get('/products');
+    
+    if (response.data && Array.isArray(response.data.products)) {
+      dispatch(setProductList(response.data.products));
+      dispatch(setTotal(response.data.total));
+      dispatch(setFetchState('FETCHED_PRODUCTS'));
+    } else {
       throw new Error('Invalid data format received from server');
-    } catch (error) {
-      retries--;
-      
-      if (error.response) {
-        console.error('Server responded with:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        });
-
-        if (error.response.status === 404) {
-          console.error('Categories endpoint not found');
-          dispatch(setFetchState('FAILED_CATEGORIES'));
-          return;
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-
-      if (retries === 0) {
-        console.error('All category retry attempts exhausted');
-        dispatch(setCategories([]));
-        dispatch(setFetchState('FAILED_CATEGORIES'));
-        return;
-      }
-
-      console.log(`Retrying categories in ${waitTime/1000} seconds... (${retries} attempts remaining)`);
-      await delay(waitTime);
-      waitTime = Math.min(waitTime * 2, maxWaitTime);
     }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    dispatch(setProductList([]));
+    dispatch(setFetchState('FAILED_PRODUCTS'));
   }
 };
 
-// Thunk action creator for fetching products with enhanced retry mechanism
-export const fetchProducts = () => async (dispatch) => {
-  dispatch(setFetchState('FETCHING_PRODUCTS'));
-  let retries = 7;
-  let waitTime = 3000;
-  const maxWaitTime = 60000;
-
-  while (retries > 0) {
-    try {
-      const response = await axios.get('https://workintech-fe-ecommerce.onrender.com/products');
-      
-      if (response.data && Array.isArray(response.data.products)) {
-        dispatch(setProductList(response.data.products));
-        dispatch(setTotal(response.data.total || response.data.products.length));
-        dispatch(setFetchState('FETCHED_PRODUCTS'));
-        return;
-      }
-      throw new Error('Invalid data format received from server');
-    } catch (error) {
-      retries--;
-      
-      if (error.response) {
-        console.error('Server responded with:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data
-        });
-
-        if (error.response.status === 404) {
-          console.error('Products endpoint not found');
-          dispatch(setFetchState('FAILED_PRODUCTS'));
-          return;
-        }
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-
-      if (retries === 0) {
-        console.error('All product retry attempts exhausted');
-        dispatch(setProductList([]));
-        dispatch(setFetchState('FAILED_PRODUCTS'));
-        return;
-      }
-
-      console.log(`Retrying products in ${waitTime/1000} seconds... (${retries} attempts remaining)`);
-      await delay(waitTime);
-      waitTime = Math.min(waitTime * 2, maxWaitTime);
+// Keep existing fetchCategories function
+export const fetchCategories = () => async (dispatch) => {
+  dispatch(setFetchState('FETCHING_CATEGORIES'));
+  
+  try {
+    const response = await axios.get('/categories');
+    if (response.data) {
+      dispatch(setCategories(response.data));
+      dispatch(setFetchState('FETCHED_CATEGORIES'));
     }
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    dispatch(setCategories([]));
+    dispatch(setFetchState('FAILED_CATEGORIES'));
   }
 };
