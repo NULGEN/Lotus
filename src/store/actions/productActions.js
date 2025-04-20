@@ -45,15 +45,18 @@ export const setFilter = (filter) => ({
 });
 
 // Thunk action creator for fetching products
-export const fetchProducts = () => async (dispatch) => {
+export const fetchProducts = (categoryId = null) => async (dispatch) => {
   dispatch(setFetchState('FETCHING_PRODUCTS'));
   
   try {
-    const response = await axios.get('/products');
+    // Modified to use query parameter instead of path parameter
+    const url = categoryId ? `/products?categoryId=${categoryId}` : '/products';
+      
+    const response = await axios.get(url);
     
     if (response.data && Array.isArray(response.data.products)) {
       dispatch(setProductList(response.data.products));
-      dispatch(setTotal(response.data.total));
+      dispatch(setTotal(response.data.total || response.data.products.length));
       dispatch(setFetchState('FETCHED_PRODUCTS'));
     } else {
       throw new Error('Invalid data format received from server');
@@ -65,7 +68,6 @@ export const fetchProducts = () => async (dispatch) => {
   }
 };
 
-// Keep existing fetchCategories function
 export const fetchCategories = () => async (dispatch) => {
   dispatch(setFetchState('FETCHING_CATEGORIES'));
   

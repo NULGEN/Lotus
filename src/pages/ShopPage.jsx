@@ -11,9 +11,12 @@ export default function ShopPage() {
   const { gender, category, id } = useParams();
 
   useEffect(() => {
-    dispatch(fetchProducts());
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchProducts(id));
+  }, [dispatch, id]);
 
   if (fetchState === 'FETCHING_PRODUCTS') {
     return <LoadingSpinner />;
@@ -60,17 +63,16 @@ export default function ShopPage() {
     return category.name || 'Category';
   };
 
-  const filteredProducts = id 
-    ? productList.filter(product => product.category_id === id)
-    : productList;
+  const selectedCategory = categories.find(cat => String(cat.id) === String(id));
+  const categoryName = selectedCategory ? getCategoryName(selectedCategory) : category;
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">
-          {id ? `${getGenderLabel(gender)} - ${getCategoryName({ code: category })}` : 'All Products'}
+          {id ? `${getGenderLabel(gender)} - ${categoryName}` : 'All Products'}
         </h1>
-        <p className="text-gray-600">Showing {filteredProducts.length} of {total} products</p>
+        <p className="text-gray-600">Showing {productList.length} of {total} products</p>
       </div>
 
       {/* Mobile Category Filter */}
@@ -78,7 +80,7 @@ export default function ShopPage() {
         <select 
           value={id || ''}
           onChange={(e) => {
-            const selectedCategory = categories.find(cat => cat.id === e.target.value);
+            const selectedCategory = categories.find(cat => String(cat.id) === e.target.value);
             if (selectedCategory) {
               window.location.href = `/shop/${selectedCategory.gender}/${selectedCategory.code?.split(':')[1] || ''}/${selectedCategory.id}`;
             } else {
@@ -125,7 +127,7 @@ export default function ShopPage() {
                   key={cat.id}
                   href={`/shop/${cat.gender}/${cat.code?.split(':')[1] || ''}/${cat.id}`}
                   className={`block w-full text-left px-4 py-2 rounded-md transition-colors duration-200 ${
-                    id === cat.id
+                    String(id) === String(cat.id)
                       ? 'bg-blue-600 text-white' 
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
@@ -140,11 +142,11 @@ export default function ShopPage() {
         {/* Products Grid */}
         <div className="flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map(product => (
+            {productList.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-          {filteredProducts.length === 0 && (
+          {productList.length === 0 && (
             <div className="text-center py-12 text-gray-600">
               No products found in this category.
             </div>
