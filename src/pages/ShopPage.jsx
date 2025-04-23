@@ -1,22 +1,57 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import debounce from 'lodash/debounce';
 import ProductCard from '../components/ProductCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { fetchProducts, fetchCategories } from '../store/actions/productActions';
 
 export default function ShopPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { productList, categories, fetchState, total } = useSelector((state) => state.products);
   const { gender, category, id } = useParams();
+  const searchInputRef = useRef(null);
+  
+  const [searchParams, setSearchParams] = useState({
+    sort: '',
+    filter: '',
+  });
+
+  const debouncedSearch = useCallback(
+    debounce((params) => {
+      dispatch(fetchProducts(params));
+    }, 500),
+    [dispatch]
+  );
 
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchProducts(id));
-  }, [dispatch, id]);
+    const params = { ...searchParams };
+    if (id) {
+      params.category = id;
+    }
+    debouncedSearch(params);
+  }, [id, searchParams, debouncedSearch]);
+
+  const handleSearchChange = (e) => {
+    const { value } = e.target;
+    setSearchParams(prev => ({
+      ...prev,
+      filter: value
+    }));
+  };
+
+  const handleSortChange = (e) => {
+    const { value } = e.target;
+    setSearchParams(prev => ({
+      ...prev,
+      sort: value
+    }));
+  };
 
   if (fetchState === 'FETCHING_PRODUCTS') {
     return <LoadingSpinner />;
@@ -41,7 +76,6 @@ export default function ShopPage() {
     }
   };
 
-  // Group categories by gender
   const categoriesByGender = categories.reduce((acc, cat) => {
     const genderKey = cat.gender || 'other';
     if (!acc[genderKey]) {
@@ -68,11 +102,33 @@ export default function ShopPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">
           {id ? `${getGenderLabel(gender)} - ${categoryName}` : 'All Products'}
         </h1>
-        <p className="text-gray-600">Showing {productList.length} of {total} products</p>
+        
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search products..."
+            value={searchParams.filter}
+            onChange={handleSearchChange}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          
+          <select
+            value={searchParams.sort}
+            onChange={handleSortChange}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Sort by...</option>
+            <option value="price:asc">Price: Low to High</option>
+            <option value="price:desc">Price: High to Low</option>
+            <option value="rating:asc">Rating: Low to High</option>
+            <option value="rating:desc">Rating: High to Low</option>
+          </select>
+        </div>
       </div>
 
       {/* Mobile Category Filter */}
@@ -82,9 +138,9 @@ export default function ShopPage() {
           onChange={(e) => {
             const selectedCategory = categories.find(cat => String(cat.id) === e.target.value);
             if (selectedCategory) {
-              window.location.href = `/shop/${selectedCategory.gender}/${selectedCategory.code?.split(':')[1] || ''}/${selectedCategory.id}`;
+              navigate(`/shop/${selectedCategory.gender}/${selectedCategory.code?.split(':')[1] || ''}/${selectedCategory.id}`);
             } else {
-              window.location.href = '/shop';
+              navigate('/shop');
             }
           }}
           className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900"
@@ -106,8 +162,8 @@ export default function ShopPage() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Desktop Category Sidebar */}
         <aside className="hidden md:block w-64 bg-white rounded-lg shadow-sm p-4">
-          <a
-            href="/shop"
+          <button
+            onClick={() => navigate('/shop')}
             className={`block w-full text-left px-4 py-2 rounded-md mb-4 ${
               !id 
                 ? 'bg-blue-600 text-white' 
@@ -115,7 +171,7 @@ export default function ShopPage() {
             }`}
           >
             All Categories
-          </a>
+          </button>
           
           {Object.entries(categoriesByGender).map(([gender, cats]) => (
             <div key={gender} className="space-y-2 mb-6">
@@ -123,9 +179,9 @@ export default function ShopPage() {
                 {getGenderLabel(gender)}
               </h3>
               {cats.map(cat => (
-                <a
+                <button
                   key={cat.id}
-                  href={`/shop/${cat.gender}/${cat.code?.split(':')[1] || ''}/${cat.id}`}
+                  onClick={() => navigate(`/shop/${cat.gender}/${cat.code?.split(':')[1] || ''}/${cat.id}`)}
                   className={`block w-full text-left px-4 py-2 rounded-md transition-colors duration-200 ${
                     String(id) === String(cat.id)
                       ? 'bg-blue-600 text-white' 
@@ -133,7 +189,7 @@ export default function ShopPage() {
                   }`}
                 >
                   {getCategoryName(cat)}
-                </a>
+                </button>
               ))}
             </div>
           ))}

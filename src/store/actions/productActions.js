@@ -87,7 +87,6 @@ const retryWithBackoff = async (fn, maxRetries = 3) => {
         break;
       }
       
-      // Increased initial delay and max delay for better handling of network issues
       const delay = Math.min(2000 * Math.pow(2, retries), 20000);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -96,14 +95,24 @@ const retryWithBackoff = async (fn, maxRetries = 3) => {
   throw lastError;
 };
 
-export const fetchProducts = (categoryId = null) => async (dispatch) => {
+export const fetchProducts = (params = {}) => async (dispatch) => {
   dispatch(setFetchState('FETCHING_PRODUCTS'));
   
   try {
-    const params = categoryId ? { category: categoryId } : {};
+    const queryParams = new URLSearchParams();
+    
+    if (params.category) {
+      queryParams.append('category', params.category);
+    }
+    if (params.filter) {
+      queryParams.append('filter', params.filter);
+    }
+    if (params.sort) {
+      queryParams.append('sort', params.sort);
+    }
     
     const response = await retryWithBackoff(async () => {
-      const result = await axios.get('/products', { params });
+      const result = await axios.get(`/products?${queryParams.toString()}`);
       
       if (!result.data) {
         throw new Error('Invalid data format received from server');
@@ -134,7 +143,7 @@ export const fetchCategories = () => async (dispatch) => {
         throw new Error('Invalid data format received from server');
       }
       return result;
-    }, 5); // Increased max retries for categories fetch
+    }, 5);
     
     dispatch(setCategories(response.data));
     dispatch(setFetchState('FETCHED_CATEGORIES'));
