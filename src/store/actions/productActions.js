@@ -101,6 +101,10 @@ export const fetchProducts = (params = {}) => async (dispatch) => {
   try {
     const queryParams = new URLSearchParams();
     
+    // Add pagination parameters
+    queryParams.append('limit', params.limit || 25);
+    queryParams.append('offset', params.offset || 0);
+    
     if (params.category) {
       queryParams.append('category', params.category);
     }
