@@ -1,8 +1,11 @@
 import { ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../store/actions/cartActions';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   if (!product) {
     return null;
@@ -46,6 +49,11 @@ export default function ProductCard({ product }) {
     navigate(`/shop/${category.gender || 'all'}/${category.code?.split(':')[1] || 'uncategorized'}/${category.id || 0}/${nameSlug}/${product.id}`);
   };
 
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    dispatch(addToCart(product));
+  };
+
   return (
     <div 
       onClick={handleProductClick}
@@ -73,10 +81,7 @@ export default function ProductCard({ product }) {
           </span>
           <button 
             className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors duration-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Add to cart logic here
-            }}
+            onClick={handleAddToCart}
           >
             <ShoppingCart size={20} />
           </button>

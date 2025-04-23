@@ -1,16 +1,32 @@
-import { SET_CART, SET_PAYMENT, SET_ADDRESS } from '../reducers/cartReducer';
+import {
+  SET_CART,
+  ADD_TO_CART,
+  REMOVE_FROM_CART,
+  UPDATE_CART_ITEM,
+  TOGGLE_CART
+} from '../reducers/cartReducer';
 
 export const setCart = (cart) => ({
   type: SET_CART,
   payload: cart
 });
 
-export const setPayment = (payment) => ({
-  type: SET_PAYMENT,
-  payload: payment
+export const addToCart = (product) => ({
+  type: ADD_TO_CART,
+  payload: product
 });
 
-export const setAddress = (address) => ({
-  type: SET_ADDRESS,
-  payload: address
+export const removeFromCart = (productId) => ({
+  type: REMOVE_FROM_CART,
+  payload: productId
+});
+
+export const updateCartItem = (productId, updates) => ({
+  type: UPDATE_CART_ITEM,
+  payload: { productId, updates }
+});
+
+export const toggleCart = (isOpen) => ({
+  type: TOGGLE_CART,
+  payload: isOpen
 });

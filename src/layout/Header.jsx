@@ -4,11 +4,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { logout } from '../store/actions/authActions';
 import { fetchCategories } from '../store/actions/productActions';
+import { toggleCart } from '../store/actions/cartActions';
+import CartDropdown from '../components/CartDropdown';
 
 export default function Header() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { categories } = useSelector((state) => state.products);
+  const { cart, isOpen } = useSelector((state) => state.cart);
   const [showCategories, setShowCategories] = useState(false);
   
   useEffect(() => {
@@ -18,6 +21,8 @@ export default function Header() {
   const handleLogout = () => {
     dispatch(logout());
   };
+
+  const totalItems = cart.reduce((sum, item) => sum + item.count, 0);
 
   const categoriesByGender = categories.reduce((acc, category) => {
     const gender = category.gender === 'k' ? 'KADIN' : category.gender === 'e' ? 'ERKEK' : category.gender;
@@ -131,12 +136,18 @@ export default function Header() {
             </div>
 
             <div className="relative">
-              <Link to="/cart" className="text-gray-600 hover:text-gray-900">
+              <button
+                onClick={() => dispatch(toggleCart())}
+                className="text-gray-600 hover:text-gray-900"
+              >
                 <ShoppingBag size={20} />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
-              </Link>
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+              <CartDropdown />
             </div>
           </div>
         </div>

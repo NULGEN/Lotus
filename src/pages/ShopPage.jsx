@@ -242,7 +242,7 @@ export default function ShopPage() {
         {/* Desktop Category Sidebar */}
         <aside className="hidden md:block w-64 bg-white rounded-lg shadow-sm p-4">
           <button
-            onClick={() => navigate('/shop')}
+            onClick={()=> navigate('/shop')}
             className={`block w-full text-left px-4 py-2 rounded-md mb-4 ${
               !id 
                 ? 'bg-blue-600 text-white' 
