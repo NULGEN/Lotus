@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await axios.get(`/api/products/${id}`);
         setProduct(response.data);
       } catch (error) {
         console.error('Error fetching product:', error);
+        setError('Failed to load product details. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -23,10 +28,30 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [id]);
 
+  const getImageUrl = (image) => {
+    if (typeof image === 'object' && image.url) {
+      return image.url;
+    }
+    if (typeof image === 'string') {
+      return image;
+    }
+    return 'https://via.placeholder.com/400x300?text=No+Image+Available';
+  };
+
+  const handleImageError = (e) => {
+    console.log('Image failed to load:', e.currentTarget.src);
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+  };
+
   if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="text-center py-12">
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
@@ -39,6 +64,8 @@ export default function ProductDetailPage() {
     );
   }
 
+  const images = Array.isArray(product.images) ? product.images : [];
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Mobile View */}
@@ -46,13 +73,14 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
           <div className="relative">
             <img
-              src={product.images[selectedImage]}
+              src={getImageUrl(images[selectedImage])}
               alt={product.name}
               className="w-full h-64 object-cover rounded-lg"
+              onError={handleImageError}
             />
-            {product.images.length > 1 && (
+            {images.length > 1 && (
               <div className="flex justify-center mt-4 space-x-2">
-                {product.images.map((image, index) => (
+                {images.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
@@ -67,7 +95,7 @@ export default function ProductDetailPage() {
           
           <div className="space-y-4">
             <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-xl font-bold text-blue-600">${product.price}</p>
+            <p className="text-xl font-bold text-blue-600">${product.price?.toFixed(2) || '0.00'}</p>
             <p className="text-gray-600">{product.description}</p>
             
             <div className="space-y-2">
@@ -87,13 +115,14 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
           <div className="aspect-w-3 aspect-h-4">
             <img
-              src={product.images[selectedImage]}
+              src={getImageUrl(images[selectedImage])}
               alt={product.name}
               className="w-full h-96 object-cover rounded-lg"
+              onError={handleImageError}
             />
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {product.images.map((image, index) => (
+            {images.map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -102,9 +131,10 @@ export default function ProductDetailPage() {
                 }`}
               >
                 <img
-                  src={image}
+                  src={getImageUrl(image)}
                   alt={`${product.name} ${index + 1}`}
                   className="w-full h-full object-cover rounded-lg"
+                  onError={handleImageError}
                 />
               </button>
             ))}
@@ -114,7 +144,7 @@ export default function ProductDetailPage() {
         <div className="space-y-6 px-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-2xl font-bold text-blue-600">${product.price}</p>
+            <p className="text-2xl font-bold text-blue-600">${product.price?.toFixed(2) || '0.00'}</p>
           </div>
 
           <div className="space-y-4">

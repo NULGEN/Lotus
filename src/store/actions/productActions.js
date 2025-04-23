@@ -44,25 +44,80 @@ export const setFilter = (filter) => ({
   payload: filter
 });
 
-// Thunk action creator for fetching products
+const getUserFriendlyErrorMessage = (error) => {
+  if (error.response) {
+    if (error.response.status === 504) {
+      return 'The server is taking too long to respond. Please try again in a few moments.';
+    }
+    if (error.response.status === 502) {
+      return 'The server is temporarily unavailable. Please wait a moment while we try to reconnect.';
+    }
+    if (error.response.status === 500) {
+      return 'The server is currently experiencing technical difficulties. Please try again in a few minutes.';
+    }
+    if (error.response.status === 404) {
+      return 'The requested resource was not found. Please check your request and try again.';
+    }
+    if (error.response.status === 503) {
+      return 'The service is temporarily unavailable. Please try again in a few minutes.';
+    }
+    return 'An unexpected error occurred. Please try again later.';
+  }
+  if (error.code === 'ECONNABORTED') {
+    return 'The request timed out. Please check your internet connection and try again.';
+  }
+  if (error.code === 'ECONNRESET') {
+    return 'The connection was interrupted. Please wait while we try to reconnect.';
+  }
+  return 'An unexpected error occurred. Please try again later.';
+};
+
+const retryWithBackoff = async (fn, maxRetries = 3) => {
+  let retries = 0;
+  let lastError = null;
+  
+  while (retries < maxRetries) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      retries++;
+      
+      if (retries === maxRetries) {
+        break;
+      }
+      
+      // Increased initial delay and max delay for better handling of network issues
+      const delay = Math.min(2000 * Math.pow(2, retries), 20000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 export const fetchProducts = (categoryId = null) => async (dispatch) => {
   dispatch(setFetchState('FETCHING_PRODUCTS'));
   
   try {
-    // Modified to use query parameter instead of path parameter
-    const url = categoryId ? `/products?categoryId=${categoryId}` : '/products';
-      
-    const response = await axios.get(url);
+    const params = categoryId ? { category: categoryId } : {};
     
-    if (response.data && Array.isArray(response.data.products)) {
-      dispatch(setProductList(response.data.products));
-      dispatch(setTotal(response.data.total || response.data.products.length));
-      dispatch(setFetchState('FETCHED_PRODUCTS'));
-    } else {
-      throw new Error('Invalid data format received from server');
-    }
+    const response = await retryWithBackoff(async () => {
+      const result = await axios.get('/products', { params });
+      
+      if (!result.data) {
+        throw new Error('Invalid data format received from server');
+      }
+      return result;
+    });
+    
+    const products = response.data.products || response.data;
+    dispatch(setProductList(Array.isArray(products) ? products : []));
+    dispatch(setTotal(response.data.total || products.length));
+    dispatch(setFetchState('FETCHED_PRODUCTS'));
   } catch (error) {
     console.error('Error fetching products:', error);
+    const userFriendlyMessage = getUserFriendlyErrorMessage(error);
     dispatch(setProductList([]));
     dispatch(setFetchState('FAILED_PRODUCTS'));
   }
@@ -72,13 +127,20 @@ export const fetchCategories = () => async (dispatch) => {
   dispatch(setFetchState('FETCHING_CATEGORIES'));
   
   try {
-    const response = await axios.get('/categories');
-    if (response.data) {
-      dispatch(setCategories(response.data));
-      dispatch(setFetchState('FETCHED_CATEGORIES'));
-    }
+    const response = await retryWithBackoff(async () => {
+      const result = await axios.get('/categories');
+      
+      if (!result.data) {
+        throw new Error('Invalid data format received from server');
+      }
+      return result;
+    }, 5); // Increased max retries for categories fetch
+    
+    dispatch(setCategories(response.data));
+    dispatch(setFetchState('FETCHED_CATEGORIES'));
   } catch (error) {
     console.error('Error fetching categories:', error);
+    const userFriendlyMessage = getUserFriendlyErrorMessage(error);
     dispatch(setCategories([]));
     dispatch(setFetchState('FAILED_CATEGORIES'));
   }

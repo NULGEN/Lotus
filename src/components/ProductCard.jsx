@@ -6,15 +6,20 @@ export default function ProductCard({ product }) {
     return null;
   }
 
-  // Get the first valid image URL from either images array or single image property
   const getImageUrl = () => {
-    if (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) {
-      return product.images[0];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      const firstImage = product.images[0];
+      if (typeof firstImage === 'object' && firstImage.url) {
+        return firstImage.url;
+      }
+      if (typeof firstImage === 'string') {
+        return firstImage;
+      }
     }
-    if (product.image) {
+    if (typeof product.image === 'string') {
       return product.image;
     }
-    if (product.thumbnail) {
+    if (typeof product.thumbnail === 'string') {
       return product.thumbnail;
     }
     return 'https://via.placeholder.com/400x300?text=No+Image+Available';

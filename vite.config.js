@@ -9,7 +9,9 @@ export default defineConfig({
         target: 'https://workintech-fe-ecommerce.onrender.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        timeout: 60000, // 1 minute
+        timeout: 600000, // 10 minutes
+        proxyTimeout: 600000,
+        keepAliveTimeout: 600000,
         secure: process.env.NODE_ENV === 'production',
         ws: true,
         configure: (proxy, _options) => {
@@ -22,20 +24,26 @@ export default defineConfig({
               timestamp: new Date().toISOString()
             });
 
-            // Set consistent headers
+            // Set consistent headers with longer timeouts
             proxyReq.setHeader('Connection', 'keep-alive');
-            proxyReq.setHeader('Keep-Alive', 'timeout=60');
+            proxyReq.setHeader('Keep-Alive', 'timeout=600');
             proxyReq.setHeader('Cache-Control', 'no-cache');
             proxyReq.setHeader('Pragma', 'no-cache');
           });
 
-          // Handle proxy errors
+          let retryCount = new Map();
+
+          // Handle proxy errors with retry logic
           proxy.on('error', (err, req, res) => {
+            const currentRetries = retryCount.get(req.url) || 0;
+            const maxRetries = 5; // Increased from 3 to 5
+            
             const errorResponse = {
               timestamp: new Date().toISOString(),
               path: req.url,
               error: err.message,
-              code: err.code
+              code: err.code,
+              retryCount: currentRetries
             };
 
             console.error('Proxy Error:', errorResponse);
@@ -45,11 +53,26 @@ export default defineConfig({
               return;
             }
 
-            // Handle specific error types
+            // Implement retry logic for specific errors with exponential backoff
+            if ((err.code === 'ECONNRESET' || err.message.includes('socket hang up')) && currentRetries < maxRetries) {
+              const retryDelay = Math.min(1000 * Math.pow(2, currentRetries), 60000); // More gradual backoff
+              retryCount.set(req.url, currentRetries + 1);
+              
+              setTimeout(() => {
+                console.log(`Retrying request to ${req.url} (attempt ${currentRetries + 1})`);
+                req.emit('retry');
+              }, retryDelay);
+              
+              return;
+            }
+
+            // Clear retry count after max retries or other errors
+            retryCount.delete(req.url);
+
             if (err.code === 'ECONNRESET' || err.message.includes('socket hang up')) {
               res.writeHead(502, {
                 'Content-Type': 'application/json',
-                'Retry-After': '5'
+                'Retry-After': '60'
               });
               res.end(JSON.stringify({
                 error: 'Connection Reset',
@@ -62,7 +85,7 @@ export default defineConfig({
             if (err.code === 'ETIMEDOUT') {
               res.writeHead(504, {
                 'Content-Type': 'application/json',
-                'Retry-After': '10'
+                'Retry-After': '120'
               });
               res.end(JSON.stringify({
                 error: 'Gateway Timeout',
@@ -75,7 +98,7 @@ export default defineConfig({
             // Default error response
             res.writeHead(500, {
               'Content-Type': 'application/json',
-              'Retry-After': '15'
+              'Retry-After': '120'
             });
             res.end(JSON.stringify({
               error: 'Proxy Error',
@@ -94,9 +117,9 @@ export default defineConfig({
               timestamp: new Date().toISOString()
             });
 
-            // Set response headers
+            // Set response headers with longer timeouts
             proxyRes.headers['connection'] = 'keep-alive';
-            proxyRes.headers['keep-alive'] = 'timeout=60';
+            proxyRes.headers['keep-alive'] = 'timeout=600';
             proxyRes.headers['cache-control'] = 'no-cache';
             proxyRes.headers['pragma'] = 'no-cache';
           });
