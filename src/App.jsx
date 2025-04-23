@@ -29,9 +29,9 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/shop/:gender/:category/:id" element={<ShopPage />} />
+          <Route path="/shop/:gender/:category/:categoryId/:productName/:productId" element={<ProductDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
@@ -42,4 +42,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

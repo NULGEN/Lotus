@@ -2,6 +2,7 @@ import axios from '../../api/axios';
 import {
   SET_CATEGORIES,
   SET_PRODUCT_LIST,
+  SET_CURRENT_PRODUCT,
   SET_TOTAL,
   SET_FETCH_STATE,
   SET_LIMIT,
@@ -17,6 +18,11 @@ export const setCategories = (categories) => ({
 export const setProductList = (products) => ({
   type: SET_PRODUCT_LIST,
   payload: products
+});
+
+export const setCurrentProduct = (product) => ({
+  type: SET_CURRENT_PRODUCT,
+  payload: product
 });
 
 export const setTotal = (total) => ({
@@ -101,7 +107,6 @@ export const fetchProducts = (params = {}) => async (dispatch) => {
   try {
     const queryParams = new URLSearchParams();
     
-    // Add pagination parameters
     queryParams.append('limit', params.limit || 25);
     queryParams.append('offset', params.offset || 0);
     
@@ -133,6 +138,29 @@ export const fetchProducts = (params = {}) => async (dispatch) => {
     const userFriendlyMessage = getUserFriendlyErrorMessage(error);
     dispatch(setProductList([]));
     dispatch(setFetchState('FAILED_PRODUCTS'));
+  }
+};
+
+export const fetchProduct = (productId) => async (dispatch) => {
+  dispatch(setFetchState('FETCHING_PRODUCT'));
+  
+  try {
+    const response = await retryWithBackoff(async () => {
+      const result = await axios.get(`/products/${productId}`);
+      
+      if (!result.data) {
+        throw new Error('Invalid data format received from server');
+      }
+      return result;
+    });
+    
+    dispatch(setCurrentProduct(response.data));
+    dispatch(setFetchState('FETCHED_PRODUCT'));
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    const userFriendlyMessage = getUserFriendlyErrorMessage(error);
+    dispatch(setCurrentProduct(null));
+    dispatch(setFetchState('FAILED_PRODUCT'));
   }
 };
 
