@@ -14,6 +14,8 @@ import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import TeamPage from './pages/TeamPage';
 import CartPage from './pages/CartPage';
+import OrderAddressPage from './pages/OrderAddressPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const dispatch = useDispatch();
@@ -37,6 +39,14 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route 
+            path="/order/address" 
+            element={
+              <ProtectedRoute>
+                <OrderAddressPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </PageContent>
       <Footer />

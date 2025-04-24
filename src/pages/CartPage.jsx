@@ -1,10 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { removeFromCart, updateCartItem } from '../store/actions/cartActions';
 
 export default function CartPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { cart } = useSelector((state) => state.cart);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const handleRemoveItem = (productId) => {
     dispatch(removeFromCart(productId));
@@ -24,6 +27,14 @@ export default function CartPage() {
     return cart
       .filter(item => item.checked)
       .reduce((sum, item) => sum + (item.product.price * item.count), 0);
+  };
+
+  const handleCreateOrder = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/order/address' } });
+    } else {
+      navigate('/order/address');
+    }
   };
 
   const shippingCost = 29.99;
@@ -168,6 +179,7 @@ export default function CartPage() {
               </div>
 
               <button
+                onClick={handleCreateOrder}
                 className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors duration-200"
               >
                 Create Order
