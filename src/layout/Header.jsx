@@ -75,13 +75,13 @@ export default function Header() {
                             {gender}
                           </h3>
                           <ul className="space-y-2">
-                            {cats.map(category => (
-                              <li key={category.id}>
+                            {cats.map(cat => (
+                              <li key={cat.id}>
                                 <Link 
-                                  to={`/shop/${category.gender}/${category.code?.split(':')[1] || ''}/${category.id}`}
+                                  to={`/shop/${cat.gender}/${cat.code?.split(':')[1] || ''}/${cat.id}`}
                                   className="text-gray-600 hover:text-blue-600 transition-colors duration-200 block py-1"
                                 >
-                                  {getCategoryName(category)}
+                                  {getCategoryName(cat)}
                                 </Link>
                               </li>
                             ))}
@@ -136,17 +136,14 @@ export default function Header() {
             </div>
 
             <div className="relative">
-              <button
-                onClick={() => dispatch(toggleCart())}
-                className="text-gray-600 hover:text-gray-900"
-              >
+              <Link to="/cart" className="text-gray-600 hover:text-gray-900">
                 <ShoppingBag size={20} />
                 {totalItems > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
-              </button>
+              </Link>
               <CartDropdown />
             </div>
           </div>

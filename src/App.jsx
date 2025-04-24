@@ -13,6 +13,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import TeamPage from './pages/TeamPage';
+import CartPage from './pages/CartPage';
 
 function App() {
   const dispatch = useDispatch();
@@ -35,6 +36,7 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/cart" element={<CartPage />} />
         </Routes>
       </PageContent>
       <Footer />
