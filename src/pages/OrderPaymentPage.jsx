@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { CreditCard, Plus, Trash2, Shield } from 'lucide-react';
 import api from '../api/axios';
 import { toast } from 'react-toastify';
+import { setCart } from '../store/actions/cartActions';
 
 export default function OrderPaymentPage() {
   const [savedCards, setSavedCards] = useState([]);
@@ -12,8 +13,10 @@ export default function OrderPaymentPage() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [use3DSecure, setUse3DSecure] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState('single');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { cart } = useSelector(state => state.cart);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -67,6 +70,46 @@ export default function OrderPaymentPage() {
       discount,
       total: subtotal + shippingCost - discount
     };
+  };
+
+  const handleCreateOrder = async () => {
+    if (!selectedCard) {
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const orderData = {
+        address_id: 1, // This should come from the previous step
+        order_date: new Date().toISOString(),
+        card_no: selectedCard.card_no,
+        card_name: selectedCard.name_on_card,
+        card_expire_month: selectedCard.expire_month,
+        card_expire_year: selectedCard.expire_year,
+        card_ccv: "000", // This should come from the form for new cards
+        price: calculateTotal().total,
+        products: cart.map(item => ({
+          product_id: item.product.id,
+          count: item.count,
+          detail: "" // Add product details if needed
+        }))
+      };
+
+      const response = await api.post('/order', orderData);
+      
+      // Clear cart and show success message
+      dispatch(setCart([]));
+      toast.success('Order placed successfully! Thank you for your purchase.');
+      
+      // Navigate to order confirmation or home page
+      navigate('/');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create order');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const onSubmit = async (data) => {
@@ -425,11 +468,11 @@ export default function OrderPaymentPage() {
                 </div>
               </div>
               <button
-                onClick={() => {/* Handle payment */}}
-                disabled={!selectedCard}
+                onClick={handleCreateOrder}
+                disabled={!selectedCard || isProcessing}
                 className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                Complete Payment
+                {isProcessing ? 'Processing...' : 'Complete Payment'}
               </button>
             </div>
           </div>
