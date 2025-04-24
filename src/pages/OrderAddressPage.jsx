@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import api from '../api/axios';
 import { toast } from 'react-toastify';
@@ -11,6 +12,7 @@ const CITIES = [
 ];
 
 export default function OrderAddressPage() {
+  const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
@@ -74,6 +76,14 @@ export default function OrderAddressPage() {
     } catch (error) {
       toast.error('Failed to delete address');
     }
+  };
+
+  const handleContinueToPayment = () => {
+    if (!selectedShippingAddress || (!sameAsShipping && !selectedBillingAddress)) {
+      toast.error('Please select required addresses');
+      return;
+    }
+    navigate('/order/payment');
   };
 
   return (
@@ -324,7 +334,7 @@ export default function OrderAddressPage() {
 
       <div className="flex justify-end">
         <button
-          onClick={() => {/* Handle continue to payment */}}
+          onClick={handleContinueToPayment}
           disabled={!selectedShippingAddress || (!sameAsShipping && !selectedBillingAddress)}
           className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >

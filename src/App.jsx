@@ -15,6 +15,7 @@ import AboutPage from './pages/AboutPage';
 import TeamPage from './pages/TeamPage';
 import CartPage from './pages/CartPage';
 import OrderAddressPage from './pages/OrderAddressPage';
+import OrderPaymentPage from './pages/OrderPaymentPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -44,6 +45,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <OrderAddressPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/order/payment" 
+            element={
+              <ProtectedRoute>
+                <OrderPaymentPage />
               </ProtectedRoute>
             } 
           />
