@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { Routes, Route, Navigate } from 'react-router-dom'; // Navigate import edildi
+import { useDispatch, useSelector } from 'react-redux'; // useSelector eklendi
 import { verifyToken } from './store/actions/authActions';
 import Header from './layout/Header';
 import Footer from './layout/Footer';
@@ -17,9 +17,11 @@ import CartPage from './pages/CartPage';
 import OrderAddressPage from './pages/OrderAddressPage';
 import OrderPaymentPage from './pages/OrderPaymentPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import PreviousOrders from './pages/PreviousOrders';
 
 function App() {
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth); // user'ı redux state'den çekiyoruz
 
   useEffect(() => {
     dispatch(verifyToken());
@@ -54,6 +56,14 @@ function App() {
               <ProtectedRoute>
                 <OrderPaymentPage />
               </ProtectedRoute>
+            } 
+          />
+
+         
+          <Route 
+            path="/orders" 
+            element={
+              user ? <Pnpm reviousOrders /> : <Navigate to="/login" />
             } 
           />
         </Routes>

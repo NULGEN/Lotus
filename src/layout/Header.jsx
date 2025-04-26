@@ -13,7 +13,8 @@ export default function Header() {
   const { categories } = useSelector((state) => state.products);
   const { cart, isOpen } = useSelector((state) => state.cart);
   const [showCategories, setShowCategories] = useState(false);
-  
+  const [showUserMenu, setShowUserMenu] = useState(false); // <- yeni ekledik
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
@@ -111,12 +112,38 @@ export default function Header() {
             
             <div className="flex items-center space-x-3">
               {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="px-8 py-2 text-sm font-medium text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors duration-200"
-                >
-                  Sign Out
-                </button>
+                <>
+                  {/* Kullanıcı adı ve dropdown menü */}
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowUserMenu(!showUserMenu)} 
+                      className="px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-200"
+                    >
+                      {user.username} ▼
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md">
+                        <Link 
+                          to="/orders" 
+                          className="block px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          Previous Orders
+                        </Link>
+                        <button 
+                          onClick={() => {
+                            handleLogout();
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <>
                   <Link 

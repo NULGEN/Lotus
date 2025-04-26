@@ -26,6 +26,7 @@ export default function authReducer(state = initialState, action) {
         error: null,
       };
     case LOGIN_SUCCESS:
+      localStorage.setItem('user', JSON.stringify(action.payload.user)); // <-- yeni ekleme
       return {
         ...state,
         token: action.payload.token,
@@ -44,6 +45,7 @@ export default function authReducer(state = initialState, action) {
         isAuthenticated: false,
       };
     case LOGOUT:
+      localStorage.removeItem('user'); // <-- logout olduğunda user da temizlensin
       return {
         ...state,
         token: null,

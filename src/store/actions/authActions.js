@@ -30,7 +30,10 @@ export const login = (credentials, remember, navigate, from) => async (dispatch)
 
   try {
     const response = await axios.post('/login', credentials);
-    const { token, user } = response.data;
+
+    const { token, name, email, role_id } = response.data; // değişiklik burada
+
+    const user = { name, email, role_id }; // user nesnesini kendimiz oluşturuyoruz
 
     if (remember) {
       localStorage.setItem('token', token);
