@@ -61,11 +61,12 @@ function App() {
 
          
           <Route 
-            path="/orders" 
-            element={
-              user ? <Pnpm reviousOrders /> : <Navigate to="/login" />
-            } 
-          />
+             path="/orders" 
+             element={
+               user ? <PreviousOrders /> : <Navigate to="/login" />
+             } 
+         />
+
         </Routes>
       </PageContent>
       <Footer />

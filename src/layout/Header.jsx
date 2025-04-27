@@ -119,7 +119,7 @@ export default function Header() {
                       onClick={() => setShowUserMenu(!showUserMenu)} 
                       className="px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-200"
                     >
-                      {user.username} ▼
+                      {user?.name} ▼
                     </button>
 
                     {showUserMenu && (
